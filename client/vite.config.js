@@ -4,11 +4,11 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import basicSsl from '@vitejs/plugin-basic-ssl'
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
     plugins: [
         react(),
         nodePolyfills(),
-        basicSsl()
+        command === 'serve' ? basicSsl() : null
     ],
 
     server: {
@@ -22,4 +22,4 @@ export default defineConfig({
 
         },
     },
-})
+}))

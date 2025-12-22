@@ -51,15 +51,26 @@ const ChatPage = () => {
             setIsIncoming(true);
         });
 
-        // We listen for 'callAccepted' inside the makeCall function context usually, 
-        // but since we separate logic, we might need a global listener or handle it within the peer instance creation.
-        // Actually, simple-peer 'signal' event handles the handshake. 
-        // But we need to signal the INITIATOR that the call is accepted.
+        socket.on('callAccepted', (signal) => {
+            setCallAccepted(true);
+            if (connectionRef.current) connectionRef.current.signal(signal);
+        });
+
+        socket.on('ice-candidate', (candidate) => {
+            if (connectionRef.current) connectionRef.current.signal(candidate);
+        });
+
+        socket.on('endCall', () => {
+            leaveCall();
+        });
 
         return () => {
             socket.off("connected");
             socket.off("message recieved");
             socket.off("callUser");
+            socket.off('callAccepted');
+            socket.off('ice-candidate');
+            socket.off('endCall');
         };
     }, [socket, user, notification, fetchAgain, selectedChat]);
 
@@ -69,7 +80,7 @@ const ChatPage = () => {
 
     const getMedia = async () => {
         try {
-            const currentStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+            const currentStream = await navigator.mediaDevices.getUserMedia({ audio: true });
             setStream(currentStream);
             if (myVideo.current) myVideo.current.srcObject = currentStream;
             return currentStream;
@@ -89,14 +100,23 @@ const ChatPage = () => {
         const currentStream = await getMedia();
         if (!currentStream) return;
 
-        const peer = new Peer({ initiator: false, trickle: false, stream: currentStream });
+        const peer = new Peer({ initiator: false, trickle: true, stream: currentStream });
 
         peer.on('signal', (data) => {
-            socket.emit('answerCall', { signal: data, to: call.from });
+            if (data.type === 'offer' || data.type === 'answer') {
+                socket.emit('answerCall', { signal: data, to: call.from });
+            } else if (data.candidate) {
+                socket.emit('ice-candidate', { candidate: data, to: call.from });
+            }
         });
 
         peer.on('stream', (currentStream) => {
             if (userVideo.current) userVideo.current.srcObject = currentStream;
+        });
+
+        peer.on('error', (err) => {
+            console.error("Peer Error:", err);
+            // alert(`Call Error: ${err.message}`); 
         });
 
         peer.signal(call.signal);
@@ -107,39 +127,46 @@ const ChatPage = () => {
         const currentStream = await getMedia();
         if (!currentStream) return;
 
-        setCall({ isReceivingCall: false, name: userName, pic: userPic, from: user._id }); // Setting local UI state
+        setCall({ isReceivingCall: false, name: userName, pic: userPic, from: user._id, userToCall: idToCall });
         setIsIncoming(false);
         setCallEnded(false);
         setCallAccepted(false);
 
-        const peer = new Peer({ initiator: true, trickle: false, stream: currentStream });
+        const peer = new Peer({ initiator: true, trickle: true, stream: currentStream });
 
         peer.on('signal', (data) => {
-            socket.emit('callUser', {
-                userToCall: idToCall,
-                signalData: data,
-                from: user._id,
-                name: user.name,
-                pic: user.pic
-            });
+            if (data.type === 'offer' || data.type === 'answer') {
+                socket.emit('callUser', {
+                    userToCall: idToCall,
+                    signalData: data,
+                    from: user._id,
+                    name: user.name,
+                    pic: user.pic
+                });
+            } else if (data.candidate) {
+                socket.emit('ice-candidate', { candidate: data, to: idToCall });
+            }
         });
 
         peer.on('stream', (currentStream) => {
             if (userVideo.current) userVideo.current.srcObject = currentStream;
         });
 
-        socket.on('callAccepted', (signal) => {
-            setCallAccepted(true);
-            peer.signal(signal);
-        });
-
-        socket.on('endCall', () => {
-            leaveCall();
+        peer.on('error', (err) => {
+            console.error("Peer Error:", err);
         });
 
         connectionRef.current = peer;
     };
 
+    // Called when *this* user clicks Hang Up
+    const hangUp = () => {
+        const targetId = call.userToCall || call.from; // Depending on who started it
+        if (targetId) socket.emit('endCall', { to: targetId });
+        leaveCall();
+    }
+
+    // Called for cleanup (local or remote trigger)
     const leaveCall = () => {
         setCallEnded(true);
         setIsIncoming(false);
@@ -149,7 +176,7 @@ const ChatPage = () => {
             setStream(null);
         }
         setCall({});
-        // window.location.reload(); // Quick fix for stream cleanup issues, but let's try to avoid full reload
+        // window.location.reload(); 
     };
 
     return (
@@ -170,7 +197,7 @@ const ChatPage = () => {
                     answerCall={answerCall}
                     call={call}
                     name={name}
-                    leaveCall={leaveCall}
+                    leaveCall={hangUp}
                     isIncoming={isIncoming}
                 />
             )}
