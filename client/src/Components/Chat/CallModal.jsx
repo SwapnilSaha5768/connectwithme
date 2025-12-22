@@ -23,6 +23,28 @@ const CallModal = ({
         }
     };
 
+    // Ringtone Logic
+    useEffect(() => {
+        let ringtone = new Audio("https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg"); // Standard Google Sound
+        ringtone.loop = true;
+
+        if (isIncoming && !callAccepted) {
+            ringtone.play().catch(e => console.log("Ringtone play failed (interaction needed):", e));
+        }
+
+        return () => {
+            ringtone.pause();
+            ringtone.currentTime = 0;
+        };
+    }, [isIncoming, callAccepted]);
+
+    // Force play remote stream when available
+    useEffect(() => {
+        if (userVideo?.current && callAccepted) {
+            userVideo.current.play().catch(e => console.error("Auto-play failed:", e));
+        }
+    }, [userVideo, callAccepted]);
+
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
             <div className="bg-dark-surface border border-neon-blue/20 rounded-2xl p-8 w-full max-w-md flex flex-col items-center shadow-[0_0_30px_rgba(0,243,255,0.1)]">
@@ -47,13 +69,21 @@ const CallModal = ({
                 </h2>
                 <p className="text-xl font-bold text-neon-blue mb-8">{call.name || name}</p>
 
-                {/* Hidden Audio Elements */}
-                {stream && (
-                    <audio playsInline ref={myVideo} autoPlay muted /> // My audio (muted to prevent echo)
-                )}
-                {callAccepted && !callEnded && (
-                    <audio playsInline ref={userVideo} autoPlay /> // Remote audio
-                )}
+                {/* Audio Elements - Visible for Debugging */}
+                <div className="flex gap-2 opacity-50 mb-4">
+                    {stream && (
+                        <div>
+                            <p className="text-xs text-white">My Mic</p>
+                            <audio playsInline ref={myVideo} autoPlay muted controls className="w-24 h-8" />
+                        </div>
+                    )}
+                    {callAccepted && !callEnded && (
+                        <div>
+                            <p className="text-xs text-white">Remote Audio</p>
+                            <audio playsInline ref={userVideo} autoPlay controls className="w-24 h-8" />
+                        </div>
+                    )}
+                </div>
 
                 {/* Controls */}
                 <div className="flex items-center gap-6">
