@@ -3,9 +3,10 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Homepage from './Pages/Homepage';
 import ChatPage from './Pages/ChatPage';
 import ProfilePage from './Pages/ProfilePage';
+import ResetPassword from './Components/Auth/ResetPassword';
 import './index.css';
 
-import ChatProvider from './Context/ChatProvider';
+import ChatProvider from './Context/ChatConfig';
 
 function App() {
     return (
@@ -16,6 +17,7 @@ function App() {
                         <Route path="/" element={<Homepage />} />
                         <Route path="/chats" element={<ChatPage />} />
                         <Route path="/profile" element={<ProfilePage />} />
+                        <Route path="/resetpassword" element={<ResetPassword />} />
                     </Routes>
                 </div>
             </ChatProvider>

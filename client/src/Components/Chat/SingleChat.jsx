@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { ChatState } from '../../Context/ChatProvider';
+import { ChatState } from '../../Context/ChatConfig';
 import axios from 'axios';
 import io from 'socket.io-client';
 import ScrollableChat from './ScrollableChat';
@@ -137,7 +137,6 @@ const SingleChat = ({ fetchAgain, setFetchAgain, socket, socketConnected, startC
             setIsRecording(true);
         } catch (err) {
             console.error("Mic error:", err);
-            // Error already handled in requestPermission mostly, but nice to have here too
             alert(`Mic Error: ${err.message}`);
         }
     };
@@ -146,7 +145,6 @@ const SingleChat = ({ fetchAgain, setFetchAgain, socket, socketConnected, startC
         if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
             mediaRecorderRef.current.stop();
             setIsRecording(false);
-            // Stop all tracks to release mic
             mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
         }
     };
@@ -189,7 +187,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain, socket, socketConnected, startC
 
     const onTouchEnd = () => {
         if (!touchStart.current || !touchEnd.current) return;
-        const distance = touchStart.current - touchEnd.current; 
+        const distance = touchStart.current - touchEnd.current;
         const isLeftEdge = touchStart.current < 50;
         const isRightSwipe = distance < -75;
 

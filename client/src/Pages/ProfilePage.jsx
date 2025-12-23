@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChatState } from '../Context/ChatProvider';
+import { ChatState } from '../Context/ChatConfig';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { User, Mail, Lock, Camera, Save, ArrowLeft, Loader2 } from 'lucide-react';

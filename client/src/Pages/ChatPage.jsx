@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 import Peer from 'simple-peer';
-import { ChatState } from '../Context/ChatProvider';
+import { ChatState } from '../Context/ChatConfig';
 import SideDrawer from '../Components/Chat/SideDrawer';
 import MyChats from '../Components/Chat/MyChats';
 import ChatBox from '../Components/Chat/ChatBox';

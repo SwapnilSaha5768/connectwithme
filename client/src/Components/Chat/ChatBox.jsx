@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChatState } from '../../Context/ChatProvider';
+import { ChatState } from '../../Context/ChatConfig';
 import SingleChat from './SingleChat';
 
 const ChatBox = ({ fetchAgain, setFetchAgain, socket, socketConnected, startCall }) => {

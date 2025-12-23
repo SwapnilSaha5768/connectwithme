@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -30,12 +30,10 @@ const Login = () => {
                 config
             );
 
-            // alert('Login Successful');
             localStorage.setItem('userInfo', JSON.stringify(data));
             setLoading(false);
             navigate('/chats');
         } catch (error) {
-            // Handle Unverified User (403)
             if (error.response && error.response.status === 403 && error.response.data.isVerified === false) {
                 alert(error.response.data.message);
                 setShowOtpInput(true);
@@ -115,14 +113,12 @@ const Login = () => {
                     </button>
 
                     <div className='text-center mt-4'>
-                        <button
+                        <Link
+                            to="/resetpassword"
                             className='text-gray-400 hover:text-neon-blue text-sm transition-colors'
-                            onClick={() => {
-                                alert('Forgot Password feature coming soon!');
-                            }}
                         >
                             Forgot Password?
-                        </button>
+                        </Link>
                     </div>
                 </>
             ) : (

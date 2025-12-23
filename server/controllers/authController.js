@@ -224,4 +224,83 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     }
 });
 
-module.exports = { registerUser, loginUser, allUsers, verifyOTP, updateUserProfile };
+// @desc    Forgot Password Request
+// @route   POST /api/user/forgotpassword
+// @access  Public
+const forgotPassword = asyncHandler(async (req, res) => {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+        res.status(404);
+        throw new Error('User not found');
+    }
+
+    // Generate 6 digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+    user.otp = otp;
+    user.otpExpires = otpExpires;
+    await user.save({ validateBeforeSave: false });
+
+    const message = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #4F46E5;">Password Reset OTP</h1>
+            <p>Your OTP for password reset is:</p>
+            <h2 style="background-color: #F3F4F6; padding: 10px; text-align: center; border-radius: 5px; letter-spacing: 5px;">${otp}</h2>
+            <p>This OTP is valid for 10 minutes. Do not share this code with anyone.</p>
+        </div>
+    `;
+
+    try {
+        await sendEmail({
+            email: user.email,
+            subject: 'ConnecT - Password Reset OTP',
+            html: message,
+        });
+
+        res.status(200).json({ success: true, message: 'OTP sent to email' });
+    } catch (error) {
+        user.otp = undefined;
+        user.otpExpires = undefined;
+        await user.save({ validateBeforeSave: false });
+
+        res.status(500);
+        throw new Error('Email could not be sent');
+    }
+});
+
+// @desc    Reset Password
+// @route   PUT /api/user/resetpassword
+// @access  Public
+const resetPassword = asyncHandler(async (req, res) => {
+    const { email, otp, password } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+        res.status(404);
+        throw new Error('User not found');
+    }
+
+    if (user.otp === otp && user.otpExpires > Date.now()) {
+        user.password = password;
+        user.otp = undefined;
+        user.otpExpires = undefined;
+        await user.save();
+
+        res.status(200).json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            pic: user.pic,
+            token: generateToken(user._id),
+        });
+    } else {
+        res.status(400);
+        throw new Error('Invalid or Expired OTP');
+    }
+});
+
+module.exports = { registerUser, loginUser, allUsers, verifyOTP, updateUserProfile, forgotPassword, resetPassword };

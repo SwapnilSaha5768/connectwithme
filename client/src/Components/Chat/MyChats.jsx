@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ChatState } from '../../Context/ChatProvider';
+import { ChatState } from '../../Context/ChatConfig';
 import axios from 'axios';
 import GroupChatModal from '../Miscellaneous/GroupChatModal';
 

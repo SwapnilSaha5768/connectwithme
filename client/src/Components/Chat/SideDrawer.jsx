@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ChatState } from '../../Context/ChatProvider';
+import { ChatState } from '../../Context/ChatConfig';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProfileModal from '../Miscellaneous/ProfileModal';
 import { Search, ArrowLeft } from 'lucide-react';

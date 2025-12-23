@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { ChatState } from '../../Context/ChatProvider';
+import { ChatState } from '../../Context/ChatConfig';
 
 const GroupChatModal = ({ children }) => {
     const [isOpen, setIsOpen] = useState(false);

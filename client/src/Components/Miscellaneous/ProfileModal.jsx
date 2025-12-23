@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Edit2, Loader } from 'lucide-react';
 import axios from 'axios';
-import { ChatState } from '../../Context/ChatProvider';
+import { ChatState } from '../../Context/ChatConfig';
 import ImageCropper from './ImageCropper';
 
 const ProfileModal = ({ user, children }) => {

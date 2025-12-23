@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { ChatState } from '../../Context/ChatProvider';
+import { ChatState } from '../../Context/ChatConfig';
 import { MoreVertical, Trash2, XCircle } from 'lucide-react';
 import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/react';
 import axios from 'axios';

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import io from 'socket.io-client';
 
 const ENDPOINT = import.meta.env.VITE_SERVER_URL || '/';
@@ -7,6 +7,7 @@ const ENDPOINT = import.meta.env.VITE_SERVER_URL || '/';
 const ChatContext = createContext();
 
 const ChatProvider = ({ children }) => {
+    console.log("ChatProvider: Rendering");
     const [selectedChat, setSelectedChat] = useState();
     const [user, setUser] = useState();
     const [notification, setNotification] = useState([]);
@@ -15,13 +16,16 @@ const ChatProvider = ({ children }) => {
     const [activeUsers, setActiveUsers] = useState([]);
 
     const navigate = useNavigate();
+    const location = useLocation();
 
     useEffect(() => {
         const userInfo = JSON.parse(localStorage.getItem('userInfo'));
         setUser(userInfo);
 
         if (!userInfo) {
-            navigate('/');
+            if (location.pathname !== '/' && location.pathname !== '/resetpassword') {
+                navigate('/');
+            }
         } else {
             const newSocket = io(ENDPOINT);
             setSocket(newSocket);
@@ -33,7 +37,7 @@ const ChatProvider = ({ children }) => {
 
             return () => newSocket.close();
         }
-    }, [navigate]);
+    }, [navigate, location.pathname]);
 
     return (
         <ChatContext.Provider
@@ -56,7 +60,11 @@ const ChatProvider = ({ children }) => {
 };
 
 export const ChatState = () => {
-    return useContext(ChatContext);
+    const context = useContext(ChatContext);
+    if (context === undefined) {
+        console.error("ChatState: Context is undefined! Attempting to access ChatContext outside of ChatProvider.");
+    }
+    return context;
 };
 
 export default ChatProvider;
