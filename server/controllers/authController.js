@@ -262,6 +262,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
         res.status(200).json({ success: true, message: 'OTP sent to email' });
     } catch (error) {
+        console.error("Forgot Password Email Error:", error);
         user.otp = undefined;
         user.otpExpires = undefined;
         await user.save({ validateBeforeSave: false });
