@@ -7,7 +7,7 @@ import MyChats from '../Components/Chat/MyChats';
 import ChatBox from '../Components/Chat/ChatBox';
 import CallModal from '../Components/Chat/CallModal';
 
-const ENDPOINT = import.meta.env.VITE_SERVER_URL || 'http://10.11.205.79:5000';
+const ENDPOINT = import.meta.env.VITE_SERVER_URL;
 var selectedChatCompare;
 
 const ChatPage = () => {
@@ -33,7 +33,7 @@ const ChatPage = () => {
 
         // Re-join room on reconnect (Crucial for mobile stability)
         socket.on('connect', () => {
-            console.log("Socket re-connected, re-joining room");
+            // console.log("Socket re-connected, re-joining room");
             socket.emit('setup', user);
             setSocketConnected(true);
         });

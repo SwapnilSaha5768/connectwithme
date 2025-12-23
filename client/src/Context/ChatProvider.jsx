@@ -12,6 +12,7 @@ const ChatProvider = ({ children }) => {
     const [notification, setNotification] = useState([]);
     const [chats, setChats] = useState([]);
     const [socket, setSocket] = useState(null);
+    const [activeUsers, setActiveUsers] = useState([]);
 
     const navigate = useNavigate();
 
@@ -25,6 +26,10 @@ const ChatProvider = ({ children }) => {
             const newSocket = io(ENDPOINT);
             setSocket(newSocket);
             newSocket.emit('setup', userInfo);
+
+            newSocket.on('connected-users', (users) => {
+                setActiveUsers(users);
+            });
 
             return () => newSocket.close();
         }
@@ -42,6 +47,7 @@ const ChatProvider = ({ children }) => {
                 chats,
                 setChats,
                 socket,
+                activeUsers,
             }}
         >
             {children}

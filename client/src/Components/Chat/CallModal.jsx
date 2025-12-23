@@ -29,7 +29,7 @@ const CallModal = ({
         ringtone.loop = true;
 
         if (isIncoming && !callAccepted) {
-            ringtone.play().catch(e => console.log("Ringtone play failed (interaction needed):", e));
+            ringtone.play().catch(e => { });
         }
 
         return () => {

@@ -42,7 +42,15 @@ const Signup = () => {
         const data = new FormData();
         data.append("image", croppedFile);
 
-        fetch(`https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_IMGBB_API_KEY || 'd89c0ba5596991030922c090b1201241'}`, {
+        const apiKey = import.meta.env.VITE_IMGBB_API_KEY;
+
+        if (!apiKey) {
+            alert("Image upload configuration missing. Please check VITE_IMGBB_API_KEY.");
+            setLoading(false);
+            return;
+        }
+
+        fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
             method: "post",
             body: data,
         })

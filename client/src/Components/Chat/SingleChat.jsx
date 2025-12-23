@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { ChatState } from '../../Context/ChatProvider';
 import axios from 'axios';
 import io from 'socket.io-client';
@@ -21,13 +21,17 @@ const SingleChat = ({ fetchAgain, setFetchAgain, socket, socketConnected, startC
     const [isRecording, setIsRecording] = useState(false);
     const [permissionGranted, setPermissionGranted] = useState(false);
     const [imgLoading, setImgLoading] = useState(false);
-    const mediaRecorderRef = React.useRef(null);
-    const audioChunksRef = React.useRef([]);
+    const mediaRecorderRef = useRef(null);
+    const audioChunksRef = useRef([]);
 
     // File input ref for image upload
-    const fileInputRef = React.useRef(null);
+    const fileInputRef = useRef(null);
 
-    const { user, selectedChat, setSelectedChat, notification, setNotification } = ChatState();
+    // Swipe Gesture Refs
+    const touchStart = useRef(null);
+    const touchEnd = useRef(null);
+
+    const { user, selectedChat, setSelectedChat, notification, setNotification, activeUsers } = ChatState();
 
     const requestPermission = async () => {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -155,6 +159,45 @@ const SingleChat = ({ fetchAgain, setFetchAgain, socket, socketConnected, startC
         return users[0]._id === loggedUser._id ? users[1] : users[0];
     };
 
+    // Handle Hardware Back Button
+    useEffect(() => {
+        if (selectedChat) {
+            // Push a state so back button doesn't exit the whole app
+            window.history.pushState(null, "", window.location.href);
+
+            const handlePopState = () => {
+                setSelectedChat('');
+            };
+
+            window.addEventListener('popstate', handlePopState);
+
+            return () => {
+                window.removeEventListener('popstate', handlePopState);
+            };
+        }
+    }, [selectedChat]);
+
+    // Swipe Handlers
+    const onTouchStart = (e) => {
+        touchEnd.current = null;
+        touchStart.current = e.targetTouches[0].clientX;
+    };
+
+    const onTouchMove = (e) => {
+        touchEnd.current = e.targetTouches[0].clientX;
+    };
+
+    const onTouchEnd = () => {
+        if (!touchStart.current || !touchEnd.current) return;
+        const distance = touchStart.current - touchEnd.current; 
+        const isLeftEdge = touchStart.current < 50;
+        const isRightSwipe = distance < -75;
+
+        if (isLeftEdge && isRightSwipe) {
+            setSelectedChat('');
+        }
+    };
+
     useEffect(() => {
         if (!socket) return;
         socket.on('typing', () => setIsTyping(true));
@@ -252,27 +295,50 @@ const SingleChat = ({ fetchAgain, setFetchAgain, socket, socketConnected, startC
     return (
         <>
             {selectedChat ? (
-                <>
+                <div
+                    className='flex flex-col h-full w-full'
+                    onTouchStart={onTouchStart}
+                    onTouchMove={onTouchMove}
+                    onTouchEnd={onTouchEnd}
+                >
                     <div className='text-lg md:text-2xl pb-3 px-2 w-full font-display font-medium flex justify-between items-center border-b border-white/10 text-white'>
-                        <button className='md:hidden flex bg-white/10 hover:bg-white/20 p-2 rounded-lg transition-colors' onClick={() => setSelectedChat('')}>
-                            <i className="fas fa-arrow-left text-white"></i>
-                        </button>
                         {!selectedChat.isGroupChat ? (
                             <>
-                                {getSender(user, selectedChat.users)}
-                                <div className="flex items-center">
+                                <div className="flex items-center gap-4">
+                                    <ProfileModal user={getSenderFull(user, selectedChat.users)}>
+                                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-neon-blue/50 hover:border-neon-blue transition-all cursor-pointer shadow-[0_0_15px_rgba(0,243,255,0.2)]">
+                                            <img
+                                                src={getSenderFull(user, selectedChat.users).pic}
+                                                alt="Profile"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                    </ProfileModal>
+                                    <div className="flex flex-col">
+                                        <span className="text-xl md:text-2xl font-bold tracking-wide text-white drop-shadow-md">
+                                            {getSender(user, selectedChat.users)}
+                                        </span>
+                                        {activeUsers.includes(getSenderFull(user, selectedChat.users)?._id) && (
+                                            <span className="text-xs text-neon-blue font-medium tracking-wider uppercase drop-shadow-[0_0_5px_theme(colors.neon.blue)] animate-pulse">
+                                                Online
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
                                     <button
-                                        className="bg-white/10 p-2 rounded-full hover:bg-white/20 ml-2 transition-colors text-neon-blue"
+                                        className="p-3 rounded-full bg-white/5 hover:bg-neon-blue/20 text-neon-blue border border-white/10 transition-all group"
                                         onClick={() => {
                                             const friend = getSenderFull(user, selectedChat.users);
                                             startCall(friend._id, friend.name, friend.pic);
                                         }}
                                         title="Audio Call"
                                     >
-                                        <Phone size={18} />
+                                        <Phone size={20} className="group-hover:scale-110 transition-transform" />
                                     </button>
                                     <button
-                                        className="bg-white/10 p-2 rounded-full hover:bg-white/20 ml-2 transition-colors text-red-500 hover:text-red-400"
+                                        className="p-3 rounded-full bg-white/5 hover:bg-red-500/20 text-red-500 border border-white/10 transition-all group"
                                         onClick={async () => {
                                             if (window.confirm("Are you sure you want to clear the entire chat history? This cannot be undone.")) {
                                                 try {
@@ -287,11 +353,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain, socket, socketConnected, startC
                                         }}
                                         title="Clear Chat History"
                                     >
-                                        <Trash2 size={18} />
+                                        <Trash2 size={20} className="group-hover:scale-110 transition-transform" />
                                     </button>
-                                    <ProfileModal user={getSenderFull(user, selectedChat.users)}>
-                                        <i className="fas fa-eye bg-white/10 p-2 rounded-full cursor-pointer hover:bg-white/20 ml-2 transition-colors text-neon-blue"></i>
-                                    </ProfileModal>
                                 </div>
                             </>
                         ) : (
@@ -428,7 +491,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain, socket, socketConnected, startC
                             />
                         </div>
                     </div>
-                </>
+                </div>
             ) : (
                 <div className="flex items-center justify-center h-full flex-col space-y-4">
                     <div className="w-24 h-24 bg-gradient-to-tr from-neon-blue to-neon-purple rounded-full blur-[40px] opacity-50 animate-pulse"></div>

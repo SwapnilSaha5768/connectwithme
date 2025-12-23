@@ -10,14 +10,31 @@ const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 const chatRoutes = require('./routes/chatRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const rateLimit = require('express-rate-limit');
+
 const app = express();
 const server = http.createServer(app);
 
+// Security Middleware
+app.use(helmet());
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+});
+app.use(limiter);
+
 // Middleware
 app.use(cors({
-  origin: "*"
+  origin: process.env.FRONTEND_URL || "http://localhost:5173", // Restrict to frontend URL
+  credentials: true
 }));
-app.use(express.json({ limit: '50mb' }));
+app.use(express.json({ limit: '50mb' })); // Body parser must be before sanitizer
+
+// Security Middleware (Body-dependent)
+// app.use(mongoSanitize());
 
 // Database Connection
 connectDB();
@@ -49,19 +66,30 @@ const io = require('socket.io')(expressServer, {
   },
 });
 
+// server/index.js
+
+let activeUsers = new Map(); // Map<UserId, Set<SocketId>>
+
 io.on('connection', (socket) => {
   console.log('Connected to socket.io');
 
   socket.on('setup', (userData) => {
     socket.join(userData._id);
     socket.userId = userData._id;
-    console.log("User Joined Room (Setup):", userData._id);
+
+    if (!activeUsers.has(userData._id)) {
+      activeUsers.set(userData._id, new Set());
+    }
+    activeUsers.get(userData._id).add(socket.id);
+
+    io.emit("connected-users", Array.from(activeUsers.keys()));
+    // console.log("User Joined Room (Setup):", userData._id);
     socket.emit('connected');
   });
 
   socket.on('join chat', (room) => {
     socket.join(room);
-    console.log('User Joined Chat Room: ' + room);
+    // console.log('User Joined Chat Room: ' + room);
   });
 
   socket.on('typing', (room) => socket.in(room).emit('typing'));
@@ -98,14 +126,14 @@ io.on('connection', (socket) => {
 
   // WebRTC Signaling Events
   socket.on("callUser", (data) => {
-    console.log(`[callUser] server received call from ${data.from} to ${data.userToCall}`);
+    // console.log(`[callUser] server received call from ${data.from} to ${data.userToCall}`);
 
     // Check if room exists/has users (optional debug)
     const room = io.sockets.adapter.rooms.get(data.userToCall);
     if (!room || room.size === 0) {
-      console.log(`[callUser] Warning: Target user ${data.userToCall} is not connected or not in their room.`);
+      // console.log(`[callUser] Warning: Target user ${data.userToCall} is not connected or not in their room.`);
     } else {
-      console.log(`[callUser] Emitting to room ${data.userToCall}`);
+      // console.log(`[callUser] Emitting to room ${data.userToCall}`);
     }
 
     socket.to(data.userToCall).emit("callUser", {
@@ -117,7 +145,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on("answerCall", (data) => {
-    console.log(`[answerCall] to ${data.to}`);
+    // console.log(`[answerCall] to ${data.to}`);
     socket.to(data.to).emit("callAccepted", data.signal);
   });
 
@@ -127,12 +155,22 @@ io.on('connection', (socket) => {
   });
 
   socket.on("endCall", (data) => {
-    console.log(`[endCall] to ${data.to}`);
+    // console.log(`[endCall] to ${data.to}`);
     socket.to(data.to).emit("endCall");
   });
 
   socket.on('disconnect', () => {
-    console.log('USER DISCONNECTED');
-    if (socket.userId) socket.leave(socket.userId);
+    // console.log('USER DISCONNECTED');
+    if (socket.userId && activeUsers.has(socket.userId)) {
+      const userSockets = activeUsers.get(socket.userId);
+      userSockets.delete(socket.id);
+
+      if (userSockets.size === 0) {
+        activeUsers.delete(socket.userId);
+      }
+
+      io.emit("connected-users", Array.from(activeUsers.keys()));
+      socket.leave(socket.userId);
+    }
   });
 });

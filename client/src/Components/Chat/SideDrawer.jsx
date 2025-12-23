@@ -68,14 +68,6 @@ const SideDrawer = () => {
     return (
         <>
             <div className='flex justify-between items-center bg-white/5 backdrop-blur-md w-full p-3 border-b border-white/10 sticky top-0 z-20'>
-                <button
-                    className='flex items-center justify-center p-3 bg-white/10 rounded-full hover:bg-white/20 transition-all text-gray-200 hover:text-neon-classy border border-white/5 group'
-                    onClick={() => setDrawerOpen(true)}
-                    title="Search Users"
-                >
-                    <Search size={22} className="group-hover:text-neon-blue transition-colors" />
-                </button>
-
                 <h2 className='text-2xl md:text-3xl font-bold text-gradient font-display tracking-wider cursor-default drop-shadow-md'>
                     ConnecT
                 </h2>
@@ -89,6 +81,13 @@ const SideDrawer = () => {
                             </span>
                         )}
                     </div>
+                    <button
+                        className='flex items-center justify-center p-3 bg-white/10 rounded-full hover:bg-white/20 transition-all text-gray-200 hover:text-neon-classy border border-white/5 group'
+                        onClick={() => setDrawerOpen(true)}
+                        title="Search Users"
+                    >
+                        <Search size={22} className="group-hover:text-neon-blue transition-colors" />
+                    </button>
 
                     <div className='relative' ref={profileRef}>
                         <div
