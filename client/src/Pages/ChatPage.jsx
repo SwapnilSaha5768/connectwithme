@@ -33,7 +33,6 @@ const ChatPage = () => {
 
         // Re-join room on reconnect (Crucial for mobile stability)
         socket.on('connect', () => {
-            // console.log("Socket re-connected, re-joining room");
             socket.emit('setup', user);
             setSocketConnected(true);
         });
@@ -54,7 +53,6 @@ const ChatPage = () => {
 
         // Call Events
         socket.on('callUser', (data) => {
-            console.log("Incoming Call:", data);
             setCall({ isReceivingCall: true, from: data.from, name: data.name, signal: data.signal, pic: data.pic });
             setIsIncoming(true);
         });

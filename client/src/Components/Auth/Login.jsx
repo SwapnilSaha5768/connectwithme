@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import { ChatState } from '../../Context/ChatConfig';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -9,6 +10,7 @@ const Login = () => {
     const [showOtpInput, setShowOtpInput] = useState(false);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const { setUser } = ChatState();
 
     const submitHandler = async (e) => {
         e.preventDefault();
@@ -30,7 +32,7 @@ const Login = () => {
                 config
             );
 
-            localStorage.setItem('userInfo', JSON.stringify(data));
+            setUser(data);
             setLoading(false);
             navigate('/chats');
         } catch (error) {
@@ -64,7 +66,7 @@ const Login = () => {
             const config = { headers: { 'Content-type': 'application/json' } };
             const { data } = await axios.post('/api/user/verify-otp', { email, otp }, config);
 
-            localStorage.setItem('userInfo', JSON.stringify(data));
+            setUser(data);
             setLoading(false);
             navigate('/chats');
         } catch (error) {

@@ -9,7 +9,7 @@ const ProfileModal = ({ user, children }) => {
     const [imgLoading, setImgLoading] = useState(false);
     const [showCropper, setShowCropper] = useState(false);
     const [tempImgSrc, setTempImgSrc] = useState(null);
-    const { setUser } = ChatState();
+    const { user: loggedInUser, setUser } = ChatState();
 
     const onFileSelect = (e) => {
         const file = e.target.files[0];
@@ -35,7 +35,7 @@ const ProfileModal = ({ user, children }) => {
             formData.append("image", croppedFile);
 
             // 1. Upload to ImgBB
-            const imgRes = await fetch(`https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_IMGBB_API_KEY || 'd89c0ba5596991030922c090b1201241'}`, {
+            const imgRes = await fetch(`https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_IMGBB_API_KEY}`, {
                 method: "POST",
                 body: formData,
             });
@@ -49,14 +49,12 @@ const ProfileModal = ({ user, children }) => {
             const newPicUrl = imgData.data.url;
 
             // 2. Update Backend
-            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            const config = { headers: { 'Content-type': 'application/json', Authorization: `Bearer ${userInfo.token}` } };
+            const config = { headers: { 'Content-type': 'application/json' } };
 
             const { data } = await axios.put('/api/user/profile', { pic: newPicUrl }, config);
 
             // 3. Update Local State
             setUser(data);
-            localStorage.setItem('userInfo', JSON.stringify(data));
             setImgLoading(false);
         } catch (error) {
             console.error(error);
@@ -97,10 +95,12 @@ const ProfileModal = ({ user, children }) => {
                                         alt={user.name}
                                         className="w-full h-full rounded-full object-cover border-4 border-neon-blue/20"
                                     />
-                                    <label className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                                        {imgLoading ? <Loader className="animate-spin text-white" /> : <Edit2 className="text-white" />}
-                                        <input type="file" className="hidden" accept="image/*" onChange={onFileSelect} disabled={imgLoading} />
-                                    </label>
+                                    {loggedInUser._id === user._id && (
+                                        <label className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                                            {imgLoading ? <Loader className="animate-spin text-white" /> : <Edit2 className="text-white" />}
+                                            <input type="file" className="hidden" accept="image/*" onChange={onFileSelect} disabled={imgLoading} />
+                                        </label>
+                                    )}
                                 </div>
 
                                 <p className="text-xl text-gray-400 font-sans tracking-wide">{user.email}</p>

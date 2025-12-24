@@ -58,7 +58,6 @@ const ProfilePage = () => {
             const config = {
                 headers: {
                     'Content-type': 'application/json',
-                    Authorization: `Bearer ${user.token}`,
                 },
             };
 
@@ -74,7 +73,7 @@ const ProfilePage = () => {
 
             alert("Profile Updated Successfully");
             setUser(data);
-            localStorage.setItem("userInfo", JSON.stringify(data));
+            setUser(data);
             setLoading(false);
         } catch (error) {
             alert(error.response?.data?.message || "Something went wrong");

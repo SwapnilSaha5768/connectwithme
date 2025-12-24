@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import ImageCropper from '../Miscellaneous/ImageCropper';
+import { ChatState } from '../../Context/ChatConfig';
 
 const Signup = () => {
     const [name, setName] = useState('');
@@ -18,6 +19,7 @@ const Signup = () => {
     const [tempImgSrc, setTempImgSrc] = useState(null);
 
     const navigate = useNavigate();
+    const { setUser } = ChatState();
 
     const onFileSelect = (e) => {
         const file = e.target.files[0];
@@ -60,7 +62,6 @@ const Signup = () => {
                 setLoading(false);
             })
             .catch((err) => {
-                console.log(err);
                 setLoading(false);
             });
     };
@@ -104,7 +105,7 @@ const Signup = () => {
             const config = { headers: { 'Content-type': 'application/json' } };
             const { data } = await axios.post('/api/user/verify-otp', { email, otp }, config);
             // alert('Verification Successful!');
-            localStorage.setItem('userInfo', JSON.stringify(data));
+            setUser(data);
             setLoading(false);
             navigate('/chats');
         } catch (error) {

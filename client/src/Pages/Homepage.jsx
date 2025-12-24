@@ -3,13 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import Login from '../Components/Auth/Login';
 import Signup from '../Components/Auth/Signup';
 
+import { ChatState } from '../Context/ChatConfig';
+
 const Homepage = () => {
     const navigate = useNavigate();
+    const { user } = ChatState();
 
     useEffect(() => {
-        const user = JSON.parse(localStorage.getItem('userInfo'));
         if (user) navigate('/chats');
-    }, [navigate]);
+    }, [navigate, user]);
 
     const [activeTab, setActiveTab] = React.useState('login');
 

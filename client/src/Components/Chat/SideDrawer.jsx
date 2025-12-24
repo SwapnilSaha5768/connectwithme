@@ -15,12 +15,21 @@ const SideDrawer = () => {
     const [profileOpen, setProfileOpen] = useState(false);
     const profileRef = useRef();
 
-    const { user, setSelectedChat, chats, setChats, notification, setNotification } = ChatState();
+    const { user, setUser, setSelectedChat, chats, setChats, notification, setNotification } = ChatState();
     const navigate = useNavigate();
 
-    const logoutHandler = () => {
-        localStorage.removeItem('userInfo');
-        navigate('/');
+    const logoutHandler = async () => {
+        try {
+            await axios.post('/api/user/logout');
+            localStorage.removeItem('userInfo'); // Optional clearing if it was there
+            setUser(null);
+            navigate('/');
+        } catch (error) {
+            console.error("Logout failed", error);
+            // Force logout on client side anyway
+            setUser(null);
+            navigate('/');
+        }
     };
 
     const handleSearch = async () => {
@@ -30,7 +39,7 @@ const SideDrawer = () => {
         }
         try {
             setLoading(true);
-            const config = { headers: { Authorization: `Bearer ${user.token}` } };
+            const config = { headers: {} };
             const { data } = await axios.get(`/api/user?search=${search}`, config);
             setLoading(false);
             setSearchResult(data);
@@ -43,7 +52,7 @@ const SideDrawer = () => {
     const accessChat = async (userId) => {
         try {
             setLoadingChat(true);
-            const config = { headers: { 'Content-type': 'application/json', Authorization: `Bearer ${user.token}` } };
+            const config = { headers: { 'Content-type': 'application/json' } };
             const { data } = await axios.post(`/api/chat`, { userId }, config);
             if (!chats.find((c) => c._id === data._id)) setChats([data, ...chats]);
             setSelectedChat(data);

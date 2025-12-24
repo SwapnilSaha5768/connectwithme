@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { ChatState } from '../../Context/ChatConfig';
 
 const ResetPassword = () => {
     // Step 1: Email
@@ -12,6 +13,7 @@ const ResetPassword = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const { setUser } = ChatState();
 
     const sendOtpHandler = async (e) => {
         e.preventDefault();
@@ -70,7 +72,7 @@ const ResetPassword = () => {
             );
 
             alert('Password Reset Successfully! Logging you in...');
-            localStorage.setItem('userInfo', JSON.stringify(data));
+            setUser(data);
             setLoading(false);
             navigate('/chats');
         } catch (error) {

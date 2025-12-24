@@ -66,7 +66,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain, socket, socketConnected, startC
             formData.append('image', file);
 
             // Upload to ImgBB
-            const response = await fetch(`https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_IMGBB_API_KEY || 'd89c0ba5596991030922c090b1201241'}`, {
+            const response = await fetch(`https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_IMGBB_API_KEY}`, {
                 method: 'POST',
                 body: formData
             });
@@ -76,7 +76,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain, socket, socketConnected, startC
                 const imgUrl = data.data.url;
 
                 // Send Message
-                const config = { headers: { 'Content-type': 'application/json', Authorization: `Bearer ${user.token}` } };
+                const config = { headers: { 'Content-type': 'application/json' } };
                 const { data: msgData } = await axios.post('/api/message', {
                     content: imgUrl,
                     chatId: selectedChat._id,
@@ -117,7 +117,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain, socket, socketConnected, startC
                 reader.onloadend = async () => {
                     const base64Audio = reader.result;
                     try {
-                        const config = { headers: { 'Content-type': 'application/json', Authorization: `Bearer ${user.token}` } };
+                        const config = { headers: { 'Content-type': 'application/json' } };
                         const { data } = await axios.post('/api/message', {
                             content: base64Audio,
                             chatId: selectedChat._id,
@@ -205,7 +205,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain, socket, socketConnected, startC
     const fetchMessages = async () => {
         if (!selectedChat) return;
         try {
-            const config = { headers: { Authorization: `Bearer ${user.token}` } };
+            const config = {};
             setLoading(true);
             const { data } = await axios.get(`/api/message/${selectedChat._id}`, config);
             setMessages(data);
@@ -258,7 +258,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain, socket, socketConnected, startC
         if (event.key === 'Enter' && newMessage) {
             if (socket) socket.emit('stop typing', selectedChat._id);
             try {
-                const config = { headers: { 'Content-type': 'application/json', Authorization: `Bearer ${user.token}` } };
+                const config = { headers: { 'Content-type': 'application/json' } };
                 setNewMessage("");
                 const { data } = await axios.post('/api/message', { content: newMessage, chatId: selectedChat._id }, config);
                 if (socket) socket.emit('new message', data);
@@ -313,7 +313,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain, socket, socketConnected, startC
                                         </div>
                                     </ProfileModal>
                                     <div className="flex flex-col">
-                                        <span className="text-xl md:text-2xl font-bold tracking-wide text-white drop-shadow-md">
+                                        <span className="text-xl md:text-2xl font-bold tracking-wide text-white drop-shadow-md truncate max-w-[200px] md:max-w-xs">
                                             {getSender(user, selectedChat.users)}
                                         </span>
                                         {activeUsers.includes(getSenderFull(user, selectedChat.users)?._id) && (
@@ -340,7 +340,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain, socket, socketConnected, startC
                                         onClick={async () => {
                                             if (window.confirm("Are you sure you want to clear the entire chat history? This cannot be undone.")) {
                                                 try {
-                                                    const config = { headers: { Authorization: `Bearer ${user.token}` } };
+                                                    const config = {};
                                                     await axios.delete(`/api/message/clear/${selectedChat._id}`, config);
                                                     if (socket) socket.emit('chat cleared', selectedChat._id);
                                                     setMessages([]);
@@ -396,7 +396,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain, socket, socketConnected, startC
                                                         const locationString = `${latitude},${longitude}`;
 
                                                         try {
-                                                            const config = { headers: { 'Content-type': 'application/json', Authorization: `Bearer ${user.token}` } };
+                                                            const config = { headers: { 'Content-type': 'application/json' } };
                                                             const { data } = await axios.post('/api/message', {
                                                                 content: locationString,
                                                                 chatId: selectedChat._id,
@@ -489,7 +489,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain, socket, socketConnected, startC
                             />
                         </div>
                     </div>
-                </div>
+                </div >
             ) : (
                 <div className="flex items-center justify-center h-full flex-col space-y-4">
                     <div className="w-24 h-24 bg-gradient-to-tr from-neon-blue to-neon-purple rounded-full blur-[40px] opacity-50 animate-pulse"></div>

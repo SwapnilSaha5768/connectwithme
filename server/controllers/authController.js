@@ -87,12 +87,19 @@ const verifyOTP = asyncHandler(async (req, res) => {
     }
 
     if (user.isVerified) {
+        const token = generateToken(user._id);
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 30 * 24 * 60 * 60 * 1000,
+        });
+
         res.status(200).json({
             _id: user._id,
             name: user.name,
             email: user.email,
             pic: user.pic,
-            token: generateToken(user._id),
             message: "User already verified"
         });
         return;
@@ -104,12 +111,19 @@ const verifyOTP = asyncHandler(async (req, res) => {
         user.otpExpires = undefined;
         await user.save();
 
+        const token = generateToken(user._id);
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 30 * 24 * 60 * 60 * 1000,
+        });
+
         res.status(200).json({
             _id: user._id,
             name: user.name,
             email: user.email,
             pic: user.pic,
-            token: generateToken(user._id),
             message: "Email verified successfully"
         });
     } else {
@@ -165,12 +179,19 @@ const loginUser = asyncHandler(async (req, res) => {
             }
         }
 
+        const token = generateToken(user._id);
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 30 * 24 * 60 * 60 * 1000,
+        });
+
         res.json({
             _id: user._id,
             name: user.name,
             email: user.email,
             pic: user.pic,
-            token: generateToken(user._id),
         });
     } else {
         res.status(401);
@@ -211,12 +232,19 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 
         const updatedUser = await user.save();
 
+        const token = generateToken(updatedUser._id);
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 30 * 24 * 60 * 60 * 1000,
+        });
+
         res.json({
             _id: updatedUser._id,
             name: updatedUser.name,
             email: updatedUser.email,
             pic: updatedUser.pic,
-            token: generateToken(updatedUser._id),
         });
     } else {
         res.status(404);
@@ -291,12 +319,19 @@ const resetPassword = asyncHandler(async (req, res) => {
         user.otpExpires = undefined;
         await user.save();
 
+        const token = generateToken(user._id);
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 30 * 24 * 60 * 60 * 1000,
+        });
+
         res.status(200).json({
             _id: user._id,
             name: user.name,
             email: user.email,
             pic: user.pic,
-            token: generateToken(user._id),
         });
     } else {
         res.status(400);
@@ -304,4 +339,28 @@ const resetPassword = asyncHandler(async (req, res) => {
     }
 });
 
-module.exports = { registerUser, loginUser, allUsers, verifyOTP, updateUserProfile, forgotPassword, resetPassword };
+// @desc    Logout user / clear cookie
+// @route   POST /api/user/logout
+// @access  Public
+const logoutUser = asyncHandler(async (req, res) => {
+    res.cookie('token', '', {
+        httpOnly: true,
+        expires: new Date(0),
+    });
+    res.status(200).json({ message: 'Logged out successfully' });
+});
+
+// @desc    Get current user
+// @route   GET /api/user/me
+// @access  Protected
+const getMe = asyncHandler(async (req, res) => {
+    const user = {
+        _id: req.user._id,
+        name: req.user.name,
+        email: req.user.email,
+        pic: req.user.pic,
+    };
+    res.status(200).json(user);
+});
+
+module.exports = { registerUser, loginUser, allUsers, verifyOTP, updateUserProfile, forgotPassword, resetPassword, logoutUser, getMe };

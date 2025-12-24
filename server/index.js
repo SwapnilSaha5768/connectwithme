@@ -21,17 +21,22 @@ const server = http.createServer(app);
 app.use(helmet());
 
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, 
+  windowMs: 15 * 60 * 1000,
   max: 100
 });
 app.use(limiter);
 
+const cookieParser = require('cookie-parser');
+
+// ... (existing imports)
+
 // Middleware
+app.use(cookieParser());
 app.use(cors({
   origin: ["http://localhost:5173", "https://connectwithme-six.vercel.app"],
   credentials: true
 }));
-app.use(express.json({ limit: '50mb' })); 
+app.use(express.json({ limit: '50mb' }));
 
 connectDB();
 

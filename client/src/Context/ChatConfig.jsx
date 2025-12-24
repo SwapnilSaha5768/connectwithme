@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
 import io from 'socket.io-client';
 
 const ENDPOINT = import.meta.env.VITE_SERVER_URL || '/';
@@ -7,7 +8,6 @@ const ENDPOINT = import.meta.env.VITE_SERVER_URL || '/';
 const ChatContext = createContext();
 
 const ChatProvider = ({ children }) => {
-    console.log("ChatProvider: Rendering");
     const [selectedChat, setSelectedChat] = useState();
     const [user, setUser] = useState();
     const [notification, setNotification] = useState([]);
@@ -15,21 +15,40 @@ const ChatProvider = ({ children }) => {
     const [socket, setSocket] = useState(null);
     const [activeUsers, setActiveUsers] = useState([]);
 
+    const [loading, setLoading] = useState(true);
+
     const navigate = useNavigate();
     const location = useLocation();
 
     useEffect(() => {
-        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-        setUser(userInfo);
-
-        if (!userInfo) {
-            if (location.pathname !== '/' && location.pathname !== '/resetpassword') {
-                navigate('/');
+        const fetchUser = async () => {
+            // If user is already set, we don't strictly need to refetch, but checking session validity is good.
+            // For optimization, we can skip if user exists, but for security, verifying cookie is better?
+            // Let's implement simple check: if !user, fetch.
+            if (!user) {
+                try {
+                    const { data } = await axios.get('/api/user/me');
+                    setUser(data);
+                    setLoading(false);
+                } catch (error) {
+                    setLoading(false);
+                    if (location.pathname !== '/' && location.pathname !== '/resetpassword') {
+                        navigate('/');
+                    }
+                }
+            } else {
+                setLoading(false);
             }
-        } else {
+        };
+
+        fetchUser();
+    }, [navigate, location.pathname]); // Dependencies
+
+    useEffect(() => {
+        if (user) {
             const newSocket = io(ENDPOINT);
             setSocket(newSocket);
-            newSocket.emit('setup', userInfo);
+            newSocket.emit('setup', user);
 
             newSocket.on('connected-users', (users) => {
                 setActiveUsers(users);
@@ -37,7 +56,7 @@ const ChatProvider = ({ children }) => {
 
             return () => newSocket.close();
         }
-    }, [navigate, location.pathname]);
+    }, [user]);
 
     return (
         <ChatContext.Provider

@@ -9,7 +9,7 @@ const MyChats = ({ fetchAgain }) => {
 
     const fetchChats = async () => {
         try {
-            const config = { headers: { Authorization: `Bearer ${user.token}` } };
+            const config = {};
             const { data } = await axios.get('/api/chat', config);
             setChats(data);
         } catch (error) {
@@ -18,9 +18,9 @@ const MyChats = ({ fetchAgain }) => {
     };
 
     useEffect(() => {
-        setLoggedUser(JSON.parse(localStorage.getItem('userInfo')));
+        setLoggedUser(user);
         if (!chats.length) fetchChats();
-    }, [fetchAgain]);
+    }, [fetchAgain, user]);
 
     const getSender = (loggedUser, users) => {
         if (!loggedUser || !users || users.length < 2) return "User";

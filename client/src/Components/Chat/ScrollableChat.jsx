@@ -9,7 +9,7 @@ const ScrollableChat = ({ messages, setMessages }) => {
 
     const deleteMessage = async (messageId, type) => {
         try {
-            const config = { headers: { Authorization: `Bearer ${user.token}` }, data: { type } };
+            const config = { data: { type } };
             const { data } = await axios.delete(`/api/message/${messageId}`, config);
 
             // Remove from local view
@@ -114,9 +114,8 @@ const ScrollableChat = ({ messages, setMessages }) => {
                             ) : m.type === 'image' ? (
                                 <img
                                     src={m.content}
-                                    alt="Shared Image"
                                     className="max-w-[250px] max-h-[300px] rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                                    onClick={() => window.open(m.content, "_blank")}
+                                    onClick={() => window.open(m.content, "_blank", "noopener,noreferrer")}
                                 />
                             ) : (
                                 m.content
