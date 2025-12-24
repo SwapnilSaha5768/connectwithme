@@ -23,12 +23,18 @@ const ChatProvider = ({ children }) => {
     useEffect(() => {
         const fetchUser = async () => {
             // If user is already set, we don't strictly need to refetch, but checking session validity is good.
-            // For optimization, we can skip if user exists, but for security, verifying cookie is better?
-            // Let's implement simple check: if !user, fetch.
             if (!user) {
                 try {
                     const { data } = await axios.get('/api/user/me');
-                    setUser(data);
+
+                    if (data) {
+                        setUser(data);
+                    } else {
+                        // User is not authenticated (backend returned null)
+                        if (location.pathname !== '/' && location.pathname !== '/resetpassword' && location.pathname !== '/register') {
+                            navigate('/');
+                        }
+                    }
                     setLoading(false);
                 } catch (error) {
                     setLoading(false);

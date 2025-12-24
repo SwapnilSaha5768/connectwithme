@@ -24,4 +24,23 @@ const protect = asyncHandler(async (req, res, next) => {
     }
 });
 
-module.exports = { protect };
+const optionalProtect = asyncHandler(async (req, res, next) => {
+    let token;
+
+    token = req.cookies.token;
+
+    if (token) {
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+            req.user = await User.findById(decoded.id).select('-password');
+        } catch (error) {
+            // Token invalid or expired - just ignore and proceed as unauthenticated
+        }
+    }
+
+    // Proceed whether authenticated or not
+    next();
+});
+
+module.exports = { protect, optionalProtect };

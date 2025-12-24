@@ -10,7 +10,7 @@ const {
     logoutUser,
     getMe
 } = require('../controllers/authController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, optionalProtect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
@@ -22,6 +22,6 @@ router.post('/verify-otp', verifyOTP);
 router.post('/forgotpassword', forgotPassword);
 router.put('/resetpassword', resetPassword);
 router.post('/logout', logoutUser);
-router.get('/me', protect, getMe);
+router.get('/me', optionalProtect, getMe);
 
 module.exports = router;

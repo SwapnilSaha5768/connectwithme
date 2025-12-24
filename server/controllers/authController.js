@@ -194,6 +194,7 @@ const loginUser = asyncHandler(async (req, res) => {
             pic: user.pic,
         });
     } else {
+        console.log(`Login failed for email: ${email}. User found: ${!!user}, Password matched: ${user ? 'No (or not checked)' : 'N/A'}`);
         res.status(401);
         throw new Error('Invalid Email or Password');
     }
@@ -286,6 +287,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
             email: user.email,
             subject: 'ConnecT - Password Reset OTP',
             html: message,
+            text: `Your OTP is ${otp}`
         });
 
         res.status(200).json({ success: true, message: 'OTP sent to email' });
@@ -356,13 +358,16 @@ const logoutUser = asyncHandler(async (req, res) => {
 // @route   GET /api/user/me
 // @access  Protected
 const getMe = asyncHandler(async (req, res) => {
-    const user = {
-        _id: req.user._id,
-        name: req.user.name,
-        email: req.user.email,
-        pic: req.user.pic,
-    };
-    res.status(200).json(user);
+    if (req.user) {
+        res.status(200).json({
+            _id: req.user._id,
+            name: req.user.name,
+            email: req.user.email,
+            pic: req.user.pic,
+        });
+    } else {
+        res.status(200).json(null);
+    }
 });
 
 module.exports = { registerUser, loginUser, allUsers, verifyOTP, updateUserProfile, forgotPassword, resetPassword, logoutUser, getMe };
