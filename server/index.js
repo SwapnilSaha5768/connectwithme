@@ -22,9 +22,7 @@ const server = http.createServer(app);
 app.use(cors({
   origin: (origin, callback) => {
     const allowedOrigins = [
-      "https://localhost:5173",
       "https://connectwithme-six.vercel.app",
-      "https://10.212.251.124:5173"
     ];
 
     if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {

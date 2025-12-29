@@ -94,8 +94,8 @@ const verifyOTP = asyncHandler(async (req, res) => {
 
         res.cookie('token', token, {
             httpOnly: true,
-            secure: isSecure,
-            sameSite: isSecure ? 'none' : 'lax',
+            secure: true,
+            sameSite: 'none',
             maxAge: 30 * 24 * 60 * 60 * 1000,
         });
 
@@ -123,8 +123,8 @@ const verifyOTP = asyncHandler(async (req, res) => {
 
         res.cookie('token', token, {
             httpOnly: true,
-            secure: isSecure,
-            sameSite: isSecure ? 'none' : 'lax',
+            secure: true, // Always secure for cross-site
+            sameSite: 'none', // Required for cross-site
             maxAge: 30 * 24 * 60 * 60 * 1000,
         });
 
@@ -196,8 +196,8 @@ const loginUser = asyncHandler(async (req, res) => {
 
         res.cookie('token', token, {
             httpOnly: true,
-            secure: isSecure,
-            sameSite: isSecure ? 'none' : 'lax',
+            secure: true,
+            sameSite: 'none',
             maxAge: 30 * 24 * 60 * 60 * 1000,
         });
 
@@ -254,8 +254,8 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 
         res.cookie('token', token, {
             httpOnly: true,
-            secure: isSecure,
-            sameSite: isSecure ? 'none' : 'lax',
+            secure: true,
+            sameSite: 'none',
             maxAge: 30 * 24 * 60 * 60 * 1000,
         });
 
@@ -348,8 +348,8 @@ const resetPassword = asyncHandler(async (req, res) => {
 
         res.cookie('token', token, {
             httpOnly: true,
-            secure: isSecure,
-            sameSite: isSecure ? 'none' : 'lax',
+            secure: true,
+            sameSite: 'none',
             maxAge: 30 * 24 * 60 * 60 * 1000,
         });
 
@@ -376,8 +376,8 @@ const logoutUser = asyncHandler(async (req, res) => {
     res.cookie('token', '', {
         httpOnly: true,
         expires: new Date(0),
-        secure: isSecure,
-        sameSite: isSecure ? 'none' : 'lax',
+        secure: true,
+        sameSite: 'none',
     });
     res.status(200).json({ message: 'Logged out successfully' });
 });
