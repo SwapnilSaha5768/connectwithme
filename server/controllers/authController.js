@@ -95,7 +95,7 @@ const verifyOTP = asyncHandler(async (req, res) => {
         res.cookie('token', token, {
             httpOnly: true,
             secure: true,
-            sameSite: 'none',
+            sameSite: 'lax',
             maxAge: 30 * 24 * 60 * 60 * 1000,
         });
 
@@ -124,7 +124,7 @@ const verifyOTP = asyncHandler(async (req, res) => {
         res.cookie('token', token, {
             httpOnly: true,
             secure: true, // Always secure for cross-site
-            sameSite: 'none', // Required for cross-site
+            sameSite: 'lax', // Required for cross-site
             maxAge: 30 * 24 * 60 * 60 * 1000,
         });
 
@@ -197,7 +197,7 @@ const loginUser = asyncHandler(async (req, res) => {
         res.cookie('token', token, {
             httpOnly: true,
             secure: true,
-            sameSite: 'none',
+            sameSite: 'lax',
             maxAge: 30 * 24 * 60 * 60 * 1000,
         });
 
@@ -255,7 +255,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
         res.cookie('token', token, {
             httpOnly: true,
             secure: true,
-            sameSite: 'none',
+            sameSite: 'lax',
             maxAge: 30 * 24 * 60 * 60 * 1000,
         });
 
@@ -349,7 +349,7 @@ const resetPassword = asyncHandler(async (req, res) => {
         res.cookie('token', token, {
             httpOnly: true,
             secure: true,
-            sameSite: 'none',
+            sameSite: 'lax',
             maxAge: 30 * 24 * 60 * 60 * 1000,
         });
 
@@ -377,7 +377,7 @@ const logoutUser = asyncHandler(async (req, res) => {
         httpOnly: true,
         expires: new Date(0),
         secure: true,
-        sameSite: 'none',
+        sameSite: 'lax',
     });
     res.status(200).json({ message: 'Logged out successfully' });
 });

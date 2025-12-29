@@ -3,7 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import io from 'socket.io-client';
 
-const ENDPOINT = import.meta.env.VITE_SERVER_URL || '/';
+const isProduction = window.location.hostname.includes('vercel.app');
+const ENDPOINT = isProduction ? '/' : (import.meta.env.VITE_SERVER_URL || 'http://localhost:5000');
 
 const ChatContext = createContext();
 
