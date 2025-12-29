@@ -33,7 +33,19 @@ const cookieParser = require('cookie-parser');
 // Middleware
 app.use(cookieParser());
 app.use(cors({
-  origin: ["http://localhost:5173", "https://connectwithme-six.vercel.app"],
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      "http://localhost:5173",
+      "https://connectwithme-six.vercel.app"
+    ];
+    // Allow vercel preview deployments
+    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+      callback(null, true);
+    } else {
+      console.log('Blocked by CORS:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(express.json({ limit: '50mb' }));

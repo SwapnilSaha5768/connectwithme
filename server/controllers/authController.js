@@ -88,11 +88,14 @@ const verifyOTP = asyncHandler(async (req, res) => {
 
     if (user.isVerified) {
         const token = generateToken(user._id);
-        const isProduction = process.env.NODE_ENV === 'production' || req.headers['x-forwarded-proto'] === 'https';
+        const origin = req.get('origin') || '';
+        const isLocalhost = origin.includes('localhost') || origin.includes('127.0.0.1');
+        const isSecure = process.env.NODE_ENV === 'production' || req.headers['x-forwarded-proto'] === 'https' || !isLocalhost;
+
         res.cookie('token', token, {
             httpOnly: true,
-            secure: isProduction,
-            sameSite: isProduction ? 'none' : 'strict',
+            secure: isSecure,
+            sameSite: isSecure ? 'none' : 'lax',
             maxAge: 30 * 24 * 60 * 60 * 1000,
         });
 
@@ -113,11 +116,14 @@ const verifyOTP = asyncHandler(async (req, res) => {
         await user.save();
 
         const token = generateToken(user._id);
-        const isProduction = process.env.NODE_ENV === 'production' || req.headers['x-forwarded-proto'] === 'https';
+        const origin = req.get('origin') || '';
+        const isLocalhost = origin.includes('localhost') || origin.includes('127.0.0.1');
+        const isSecure = process.env.NODE_ENV === 'production' || req.headers['x-forwarded-proto'] === 'https' || !isLocalhost;
+
         res.cookie('token', token, {
             httpOnly: true,
-            secure: isProduction,
-            sameSite: isProduction ? 'none' : 'strict',
+            secure: isSecure,
+            sameSite: isSecure ? 'none' : 'lax',
             maxAge: 30 * 24 * 60 * 60 * 1000,
         });
 
@@ -182,11 +188,14 @@ const loginUser = asyncHandler(async (req, res) => {
         }
 
         const token = generateToken(user._id);
-        const isProduction = process.env.NODE_ENV === 'production' || req.headers['x-forwarded-proto'] === 'https';
+        const origin = req.get('origin') || '';
+        const isLocalhost = origin.includes('localhost') || origin.includes('127.0.0.1');
+        const isSecure = process.env.NODE_ENV === 'production' || req.headers['x-forwarded-proto'] === 'https' || !isLocalhost;
+
         res.cookie('token', token, {
             httpOnly: true,
-            secure: isProduction,
-            sameSite: isProduction ? 'none' : 'strict',
+            secure: isSecure,
+            sameSite: isSecure ? 'none' : 'lax',
             maxAge: 30 * 24 * 60 * 60 * 1000,
         });
 
@@ -237,11 +246,14 @@ const updateUserProfile = asyncHandler(async (req, res) => {
         const updatedUser = await user.save();
 
         const token = generateToken(updatedUser._id);
-        const isProduction = process.env.NODE_ENV === 'production' || req.headers['x-forwarded-proto'] === 'https';
+        const origin = req.get('origin') || '';
+        const isLocalhost = origin.includes('localhost') || origin.includes('127.0.0.1');
+        const isSecure = process.env.NODE_ENV === 'production' || req.headers['x-forwarded-proto'] === 'https' || !isLocalhost;
+
         res.cookie('token', token, {
             httpOnly: true,
-            secure: isProduction,
-            sameSite: isProduction ? 'none' : 'strict',
+            secure: isSecure,
+            sameSite: isSecure ? 'none' : 'lax',
             maxAge: 30 * 24 * 60 * 60 * 1000,
         });
 
@@ -326,11 +338,15 @@ const resetPassword = asyncHandler(async (req, res) => {
         await user.save();
 
         const token = generateToken(user._id);
-        const isProduction = process.env.NODE_ENV === 'production' || req.headers['x-forwarded-proto'] === 'https';
+
+        const origin = req.get('origin') || '';
+        const isLocalhost = origin.includes('localhost') || origin.includes('127.0.0.1');
+        const isSecure = process.env.NODE_ENV === 'production' || req.headers['x-forwarded-proto'] === 'https' || !isLocalhost;
+
         res.cookie('token', token, {
             httpOnly: true,
-            secure: isProduction,
-            sameSite: isProduction ? 'none' : 'strict',
+            secure: isSecure,
+            sameSite: isSecure ? 'none' : 'lax',
             maxAge: 30 * 24 * 60 * 60 * 1000,
         });
 
@@ -350,12 +366,15 @@ const resetPassword = asyncHandler(async (req, res) => {
 // @route   POST /api/user/logout
 // @access  Public
 const logoutUser = asyncHandler(async (req, res) => {
-    const isProduction = process.env.NODE_ENV === 'production' || req.headers['x-forwarded-proto'] === 'https';
+    const origin = req.get('origin') || '';
+    const isLocalhost = origin.includes('localhost') || origin.includes('127.0.0.1');
+    const isSecure = process.env.NODE_ENV === 'production' || req.headers['x-forwarded-proto'] === 'https' || !isLocalhost;
+
     res.cookie('token', '', {
         httpOnly: true,
         expires: new Date(0),
-        secure: isProduction,
-        sameSite: isProduction ? 'none' : 'strict',
+        secure: isSecure,
+        sameSite: isSecure ? 'none' : 'lax',
     });
     res.status(200).json({ message: 'Logged out successfully' });
 });
