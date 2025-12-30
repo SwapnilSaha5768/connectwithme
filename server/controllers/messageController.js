@@ -22,7 +22,8 @@ const allMessages = asyncHandler(async (req, res) => {
             deletedBy: { $ne: req.user._id }
         })
             .populate('sender', 'name pic email')
-            .populate('chat');
+            .populate('chat')
+            .populate('reactions.user', 'name pic email');
         res.json(messages);
     } catch (error) {
         res.status(400);
@@ -75,6 +76,10 @@ const sendMessage = asyncHandler(async (req, res) => {
         message = await message.populate('chat');
         message = await User.populate(message, {
             path: 'chat.users',
+            select: 'name pic email',
+        });
+        message = await User.populate(message, {
+            path: 'reactions.user',
             select: 'name pic email',
         });
 
@@ -193,4 +198,56 @@ const markUnread = asyncHandler(async (req, res) => {
     }
 });
 
-module.exports = { allMessages, sendMessage, deleteMessage, clearChatMessages, readMessage, markUnread };
+// @desc    React to a message
+// @route   PUT /api/message/react
+// @access  Protected
+const reactToMessage = asyncHandler(async (req, res) => {
+    const { messageId, emoji } = req.body;
+
+    if (!messageId || !emoji) {
+        res.status(400);
+        throw new Error("Message ID and Emoji are required");
+    }
+
+    try {
+        const message = await Message.findById(messageId);
+
+        if (!message) {
+            res.status(404);
+            throw new Error("Message not found");
+        }
+
+        const existingReaction = message.reactions.find(
+            (r) => r.user.toString() === req.user._id.toString()
+        );
+
+        if (existingReaction) {
+            if (existingReaction.emoji === emoji) {
+                // Toggle off (remove reaction)
+                message.reactions = message.reactions.filter(
+                    (r) => r.user.toString() !== req.user._id.toString()
+                );
+            } else {
+                // Update reaction
+                existingReaction.emoji = emoji;
+            }
+        } else {
+            // Add new reaction
+            message.reactions.push({ user: req.user._id, emoji });
+        }
+
+        await message.save();
+
+        const updatedMessage = await Message.findById(messageId)
+            .populate("sender", "name pic email")
+            .populate("chat")
+            .populate("reactions.user", "name pic email");
+
+        res.json(updatedMessage);
+    } catch (error) {
+        res.status(400);
+        throw new Error(error.message);
+    }
+});
+
+module.exports = { allMessages, sendMessage, deleteMessage, clearChatMessages, readMessage, markUnread, reactToMessage };

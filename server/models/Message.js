@@ -12,6 +12,12 @@ const messageSchema = mongoose.Schema(
             default: 'text'
         },
         deletedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+        reactions: [
+            {
+                user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+                emoji: { type: String, required: true }
+            }
+        ],
     },
     {
         timestamps: true,

@@ -29,20 +29,18 @@ const ChatPage = () => {
 
     const userVideo = useRef();
     const connectionRef = useRef();
-    const streamRef = useRef(); // Ref to hold stream for cleanup in stale closures
+    const streamRef = useRef();
 
     useEffect(() => {
         if (!socket) return;
         if (socket.connected) setSocketConnected(true);
 
-        // Re-join room on reconnect (Crucial for mobile stability)
         socket.on('connect', () => {
             socket.emit('setup', user);
             setSocketConnected(true);
         });
-    }, [socket, user]); // Added user dependency
+    }, [socket, user]);
 
-    // Message Handling - Frequent Updates
     useEffect(() => {
         if (!socket) return;
         socket.on('connected', () => setSocketConnected(true));
@@ -59,15 +57,15 @@ const ChatPage = () => {
             socket.off("connected");
             socket.off("message recieved");
         };
-    }, [socket, notification, fetchAgain, selectedChat]); // Keep these dependencies for message logic
+    }, [socket, notification, fetchAgain, selectedChat]);
 
-    // Call Handling - Stable Listeners
     useEffect(() => {
         if (!socket) return;
 
         socket.on('callUser', (data) => {
             setCall({ isReceivingCall: true, from: data.from, name: data.name, signal: data.signal, pic: data.pic, isVideo: data.isVideo });
             setIsIncoming(true);
+            setCallEnded(false);
         });
 
         socket.on('callAccepted', (signal) => {
@@ -89,7 +87,7 @@ const ChatPage = () => {
             socket.off('ice-candidate');
             socket.off('endCall');
         };
-    }, [socket]); // Only depend on socket stability
+    }, [socket]);
 
     useEffect(() => {
         selectedChatCompare = selectedChat;
@@ -150,7 +148,6 @@ const ChatPage = () => {
 
         peer.on('error', (err) => {
             console.error("Peer Error:", err);
-            // Ignore intentional close errors
             if (err.message && (err.message.includes('User-Initiated Abort') || err.message.includes('Close called'))) {
                 return;
             }
@@ -211,14 +208,12 @@ const ChatPage = () => {
         connectionRef.current = peer;
     };
 
-    // Called when *this* user clicks Hang Up
     const hangUp = () => {
-        const targetId = call.userToCall || call.from; // Depending on who started it
+        const targetId = call.userToCall || call.from;
         if (targetId) socket.emit('endCall', { to: targetId });
         leaveCall();
     }
 
-    // Called for cleanup (local or remote trigger)
     const leaveCall = () => {
         setCallEnded(true);
         setIsIncoming(false);
@@ -230,7 +225,6 @@ const ChatPage = () => {
             connectionRef.current = null;
         }
 
-        // Use ref to ensure we access the current stream even in stale closures (socket listeners)
         if (streamRef.current) {
             streamRef.current.getTracks().forEach(track => {
                 track.stop();
@@ -243,7 +237,6 @@ const ChatPage = () => {
         if (myVideo.current) myVideo.current.srcObject = null;
         if (userVideo.current) userVideo.current.srcObject = null;
 
-        // Reset call state immediately to close modal without refresh/freeze
         setCall({});
     };
 
