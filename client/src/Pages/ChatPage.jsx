@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 import Peer from 'simple-peer';
 import { ChatState } from '../Context/ChatConfig';
+import { toast } from 'react-toastify';
 import SideDrawer from '../Components/Chat/SideDrawer';
 import MyChats from '../Components/Chat/MyChats';
 import ChatBox from '../Components/Chat/ChatBox';
@@ -28,6 +29,7 @@ const ChatPage = () => {
 
     const userVideo = useRef();
     const connectionRef = useRef();
+    const streamRef = useRef(); // Ref to hold stream for cleanup in stale closures
 
     useEffect(() => {
         if (!socket) return;
@@ -99,6 +101,7 @@ const ChatPage = () => {
             const currentStream = await navigator.mediaDevices.getUserMedia(constraints);
 
             setStream(currentStream);
+            streamRef.current = currentStream; // Keep ref in sync
             if (myVideo.current) myVideo.current.srcObject = currentStream;
             return currentStream;
         } catch (err) {
@@ -147,6 +150,10 @@ const ChatPage = () => {
 
         peer.on('error', (err) => {
             console.error("Peer Error:", err);
+            // Ignore intentional close errors
+            if (err.message && (err.message.includes('User-Initiated Abort') || err.message.includes('Close called'))) {
+                return;
+            }
             toast.error("Call connection failed. Please try again.");
             leaveCall();
         });
@@ -193,6 +200,10 @@ const ChatPage = () => {
 
         peer.on('error', (err) => {
             console.error("Peer Error:", err);
+            // Ignore intentional close errors
+            if (err.message && (err.message.includes('User-Initiated Abort') || err.message.includes('Close called'))) {
+                return;
+            }
             toast.error("Call connection failed. Please try again.");
             leaveCall();
         });
@@ -219,11 +230,13 @@ const ChatPage = () => {
             connectionRef.current = null;
         }
 
-        if (stream) {
-            stream.getTracks().forEach(track => {
+        // Use ref to ensure we access the current stream even in stale closures (socket listeners)
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => {
                 track.stop();
                 track.enabled = false;
             });
+            streamRef.current = null;
             setStream(null);
         }
 
