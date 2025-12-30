@@ -4,8 +4,7 @@ import axios from 'axios';
 import io from 'socket.io-client';
 import Loading from '../Components/Miscellaneous/Loading';
 
-const isProduction = window.location.hostname.includes('vercel.app');
-const ENDPOINT = isProduction ? '/' : (import.meta.env.VITE_SERVER_URL);
+const ENDPOINT = import.meta.env.VITE_SERVER_URL;
 
 const ChatContext = createContext();
 

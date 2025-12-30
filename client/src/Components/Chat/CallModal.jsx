@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Peer from 'simple-peer';
 import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const CallModal = ({
     stream,
@@ -119,9 +120,20 @@ const CallModal = ({
                 </div>
             )}
 
-            {/* --- LOCAL VIDEO (Picture in Picture) --- */}
+            {/* --- LOCAL VIDEO (Picture in Picture - Draggable) --- */}
             {stream && isVideoCall && (
-                <div className={`absolute bottom-24 right-4 md:bottom-8 md:right-8 w-32 md:w-64 aspect-video bg-gray-900 rounded-xl overflow-hidden border-2 border-neon-blue/50 shadow-2xl z-30 transition-all duration-300 ${!callAccepted ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                <motion.div
+                    drag
+                    dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }} // We will use a ref constraint typically, or just let it float freely within window.
+                    // Actually, usually we set dragConstraints to the parent container ref.
+                    dragElastic={0.1}
+                    dragMomentum={false}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ cursor: "grabbing" }}
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className={`absolute top-4 right-4 md:top-8 md:right-8 w-28 md:w-64 aspect-[3/4] md:aspect-video bg-gray-900 rounded-xl overflow-hidden border-2 border-neon-blue/50 shadow-2xl z-50 cursor-grab ${!callAccepted ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+                >
                     <video
                         playsInline
                         muted
@@ -133,15 +145,13 @@ const CallModal = ({
                         <div className="w-full h-full flex items-center justify-center bg-gray-800 text-gray-500">
                             <div className="flex flex-col items-center gap-2">
                                 <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-600">
-                                    {/* Try to show own avatar if available in future, for now generic placeholder or icon */}
-                                    {/* Assuming we might want to pass 'user' prop or just show icon */}
                                     <VideoOff size={24} />
                                 </div>
                                 <span className="text-xs">Camera Off</span>
                             </div>
                         </div>
                     )}
-                </div>
+                </motion.div>
             )}
 
             {/* Only for verifying stream audio when video is off logic, hidden audio element if needed but existing refs handle it. 
