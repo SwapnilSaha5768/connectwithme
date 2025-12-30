@@ -13,28 +13,14 @@ const CallModal = ({
     call,
     name,
     leaveCall,
-    isIncoming
+    isIncoming,
+    remoteStream // Added
 }) => {
     const isVideoCall = call.isVideo || (stream && stream.getVideoTracks().length > 0);
     const [videoEnabled, setVideoEnabled] = useState(true);
     const [muted, setMuted] = useState(false);
 
-    const toggleMute = () => {
-        if (stream) {
-            setMuted(!muted);
-            stream.getAudioTracks()[0].enabled = !stream.getAudioTracks()[0].enabled;
-        }
-    };
-
-    const toggleVideo = () => {
-        if (stream) {
-            setVideoEnabled(!videoEnabled);
-            const videoTrack = stream.getVideoTracks()[0];
-            if (videoTrack) {
-                videoTrack.enabled = !videoTrack.enabled;
-            }
-        }
-    };
+    // ... (keep mute/toggleVideo)
 
     // Ringtone Logic
     useEffect(() => {
@@ -53,16 +39,33 @@ const CallModal = ({
 
     // Force play remote stream when available
     useEffect(() => {
-        if (userVideo?.current && callAccepted) {
-            userVideo.current.play().catch(e => console.error("Auto-play failed:", e));
+        if (userVideo?.current && callAccepted && !callEnded) {
+            if (remoteStream) {
+                userVideo.current.srcObject = remoteStream;
+            }
+            const playVideo = async () => {
+                try {
+                    await userVideo.current.play();
+                } catch (error) {
+                    if (error.name !== "AbortError") console.error("Auto-play failed:", error);
+                }
+            };
+            playVideo();
         }
-    }, [userVideo, callAccepted]);
+    }, [userVideo, callAccepted, callEnded, remoteStream]);
 
     // Attach Local Stream (Fix for "My Mic" not moving)
     useEffect(() => {
         if (myVideo?.current && stream) {
             myVideo.current.srcObject = stream;
-            myVideo.current.play().catch(e => console.error("Local Audio play failed", e));
+            const playVideo = async () => {
+                try {
+                    await myVideo.current.play();
+                } catch (error) {
+                    if (error.name !== "AbortError") console.error("Local video play failed", error);
+                }
+            };
+            playVideo();
         }
     }, [myVideo, stream]);
 

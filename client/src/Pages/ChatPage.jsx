@@ -24,6 +24,8 @@ const ChatPage = () => {
     const [isIncoming, setIsIncoming] = useState(false);
 
     const myVideo = useRef();
+    const [remoteStream, setRemoteStream] = useState(null);
+
     const userVideo = useRef();
     const connectionRef = useRef();
 
@@ -38,9 +40,9 @@ const ChatPage = () => {
         });
     }, [socket, user]); // Added user dependency
 
+    // Message Handling - Frequent Updates
     useEffect(() => {
         if (!socket) return;
-
         socket.on('connected', () => setSocketConnected(true));
         socket.on('message recieved', (newMessageRecieved) => {
             if (!selectedChatCompare || selectedChatCompare._id !== newMessageRecieved.chat._id) {
@@ -51,7 +53,16 @@ const ChatPage = () => {
             }
         });
 
-        // Call Events
+        return () => {
+            socket.off("connected");
+            socket.off("message recieved");
+        };
+    }, [socket, notification, fetchAgain, selectedChat]); // Keep these dependencies for message logic
+
+    // Call Handling - Stable Listeners
+    useEffect(() => {
+        if (!socket) return;
+
         socket.on('callUser', (data) => {
             setCall({ isReceivingCall: true, from: data.from, name: data.name, signal: data.signal, pic: data.pic, isVideo: data.isVideo });
             setIsIncoming(true);
@@ -71,14 +82,12 @@ const ChatPage = () => {
         });
 
         return () => {
-            socket.off("connected");
-            socket.off("message recieved");
             socket.off("callUser");
             socket.off('callAccepted');
             socket.off('ice-candidate');
             socket.off('endCall');
         };
-    }, [socket, user, notification, fetchAgain, selectedChat]);
+    }, [socket]); // Only depend on socket stability
 
     useEffect(() => {
         selectedChatCompare = selectedChat;
@@ -222,6 +231,7 @@ const ChatPage = () => {
             {(isIncoming || (call.name && !callEnded)) && (
                 <CallModal
                     stream={stream}
+                    remoteStream={remoteStream}
                     callAccepted={callAccepted}
                     myVideo={myVideo}
                     userVideo={userVideo}

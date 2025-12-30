@@ -560,9 +560,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain, socket, socketConnected, startC
                     </div>
                 </div >
             ) : (
-                <div className="flex items-center justify-center h-full flex-col space-y-4">
-                    <div className="w-24 h-24 bg-gradient-to-tr from-neon-blue to-neon-purple rounded-full blur-[40px] opacity-50 animate-pulse"></div>
-                    <p className="text-3xl font-display text-gray-400 opacity-80 z-10">
+                <div className="flex items-center justify-center h-full flex-col space-y-4 p-4 text-center">
+                    <p className="text-xl md:text-3xl font-display text-gray-400 opacity-80 z-10">
                         Click on a user to start <span className="text-gradient">Chatting</span>
                     </p>
                 </div>
