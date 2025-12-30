@@ -20,7 +20,22 @@ const CallModal = ({
     const [videoEnabled, setVideoEnabled] = useState(true);
     const [muted, setMuted] = useState(false);
 
-    // ... (keep mute/toggleVideo)
+    const toggleMute = () => {
+        if (stream) {
+            setMuted(!muted);
+            stream.getAudioTracks()[0].enabled = !stream.getAudioTracks()[0].enabled;
+        }
+    };
+
+    const toggleVideo = () => {
+        if (stream) {
+            setVideoEnabled(!videoEnabled);
+            const videoTrack = stream.getVideoTracks()[0];
+            if (videoTrack) {
+                videoTrack.enabled = !videoTrack.enabled;
+            }
+        }
+    };
 
     // Ringtone Logic
     useEffect(() => {
