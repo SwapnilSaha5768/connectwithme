@@ -125,6 +125,7 @@ const ChatPage = () => {
         if (!currentStream) return;
 
         setCallAccepted(true); // Only accept call after media is ready
+        setIsIncoming(false);
 
         const peer = new Peer({
             initiator: false,
@@ -215,29 +216,41 @@ const ChatPage = () => {
     }
 
     const leaveCall = () => {
+        // 1. Critical UI updates first (Force unmount)
         setCallEnded(true);
         setIsIncoming(false);
         setCallAccepted(false);
-        setRemoteStream(null);
-
-        if (connectionRef.current) {
-            connectionRef.current.destroy();
-            connectionRef.current = null;
-        }
-
-        if (streamRef.current) {
-            streamRef.current.getTracks().forEach(track => {
-                track.stop();
-                track.enabled = false;
-            });
-            streamRef.current = null;
-            setStream(null);
-        }
-
-        if (myVideo.current) myVideo.current.srcObject = null;
-        if (userVideo.current) userVideo.current.srcObject = null;
-
         setCall({});
+
+        // 2. Defer heavy cleanup to allow UI to render immediately
+        setTimeout(() => {
+            setRemoteStream(null);
+
+            if (connectionRef.current) {
+                try {
+                    connectionRef.current.destroy();
+                } catch (error) {
+                    console.error("Peer destroy error:", error);
+                }
+                connectionRef.current = null;
+            }
+
+            if (streamRef.current) {
+                try {
+                    streamRef.current.getTracks().forEach(track => {
+                        track.stop();
+                        track.enabled = false;
+                    });
+                } catch (error) {
+                    console.error("Stream stop error:", error);
+                }
+                streamRef.current = null;
+                setStream(null);
+            }
+
+            if (myVideo.current) myVideo.current.srcObject = null;
+            if (userVideo.current) userVideo.current.srcObject = null;
+        }, 100);
     };
 
     return (
