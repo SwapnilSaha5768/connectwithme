@@ -89,28 +89,37 @@ const CallModal = ({
 
             {/* --- REMOTE VIDEO (Full Screen Background) --- */}
             <div className="absolute inset-0 w-full h-full">
-                {callAccepted && !callEnded && isVideoCall ? (
-                    <video
-                        playsInline
-                        ref={userVideo}
-                        autoPlay
-                        className="w-full h-full object-cover"
-                    />
-                ) : (
-                    /* Blurred Background for Incoming/Calling state or No Video */
-                    <div className="w-full h-full relative">
+                {/* Always render video to ensure audio plays, even if hidden */}
+                <video
+                    playsInline
+                    ref={userVideo}
+                    autoPlay
+                    className={`w-full h-full object-cover ${callAccepted && !callEnded && isVideoCall ? 'block' : 'hidden'}`}
+                />
+
+                {/* Placeholder / Background for Audio Calls, Incoming, or Loading Video */}
+                {(!callAccepted || callEnded || !isVideoCall || (callAccepted && !remoteStream)) && (
+                    <div className="absolute inset-0 w-full h-full bg-gray-900">
                         <img
                             src={call.pic || "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg"}
                             alt="background"
                             className="w-full h-full object-cover blur-3xl opacity-50"
                         />
                         <div className="absolute inset-0 bg-black/40"></div>
+
+                        {/* Loading Spinner for Video Call Connecting */}
+                        {callAccepted && !callEnded && isVideoCall && !remoteStream && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center z-50">
+                                <div className="w-12 h-12 border-4 border-neon-blue border-t-transparent rounded-full animate-spin mb-4"></div>
+                                <p className="text-white font-medium animate-pulse">Connecting video...</p>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
 
-            {/* --- CENTER INFO (Calling / Incoming) --- */}
-            {(!callAccepted || callEnded) && (
+            {/* --- CENTER INFO (Calling / Incoming / Audio Call) --- */}
+            {(!callAccepted || callEnded || !isVideoCall) && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center z-20 animate-fade-in text-center p-4">
                     <div className="relative mb-8">
                         <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-neon-blue shadow-[0_0_40px_rgba(0,243,255,0.3)] bg-gray-900">
@@ -120,21 +129,36 @@ const CallModal = ({
                                 className="w-full h-full object-cover"
                             />
                         </div>
-                        {/* Ripples */}
+                        {/* Ripples - Only show when waiting for connection */}
                         {!callAccepted && !callEnded && (
                             <>
                                 <div className="absolute inset-0 rounded-full border-2 border-neon-blue animate-ping opacity-30 delay-100"></div>
                                 <div className="absolute inset-0 rounded-full border-2 border-neon-blue animate-ping opacity-20 delay-300"></div>
                             </>
                         )}
+                        {/* Pulsing effect for active audio call */}
+                        {callAccepted && !callEnded && !isVideoCall && (
+                            <div className="absolute inset-0 rounded-full border-2 border-neon-blue animate-pulse opacity-50"></div>
+                        )}
                     </div>
 
                     <h2 className="text-3xl md:text-4xl font-display font-light mb-2 drop-shadow-lg">
-                        {isIncoming ? "Incoming Call..." : "Calling..."}
+                        {callEnded
+                            ? "Call Ended"
+                            : callAccepted && !isVideoCall
+                                ? "Connected"
+                                : isIncoming
+                                    ? "Incoming Call..."
+                                    : "Calling..."}
                     </h2>
                     <p className="text-2xl md:text-3xl font-bold text-neon-blue drop-shadow-[0_0_10px_rgba(0,243,255,0.8)]">
                         {call.name || name}
                     </p>
+
+                    {/* Timer could go here in future */}
+                    {callAccepted && !isVideoCall && (
+                        <p className="text-white/60 mt-2 font-mono text-sm">Audio Call</p>
+                    )}
                 </div>
             )}
 

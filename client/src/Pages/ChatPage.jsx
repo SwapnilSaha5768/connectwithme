@@ -112,24 +112,24 @@ const ChatPage = () => {
         }
     };
 
+    const ICE_SERVERS = [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:global.stun.twilio.com:3478' },
+        { urls: 'stun:stun.stunprotocol.org:3478' },
+        { urls: 'stun:stun.framasoft.org:3478' },
+    ];
+
     const answerCall = async () => {
-        setCallAccepted(true);
-        // If the incoming call is video, we answer with video? 
-        // For now, let's default to answering with video if the call was video, or maybe just always ask for video if available?
-        // Let's check call.isVideo property (which we need to add to the signal).
         const currentStream = await getMedia(call.isVideo);
         if (!currentStream) return;
+
+        setCallAccepted(true); // Only accept call after media is ready
 
         const peer = new Peer({
             initiator: false,
             trickle: true,
             stream: currentStream,
-            config: {
-                iceServers: [
-                    { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:global.stun.twilio.com:3478' }
-                ]
-            }
+            config: { iceServers: ICE_SERVERS }
         });
 
         peer.on('signal', (data) => {
@@ -141,12 +141,14 @@ const ChatPage = () => {
         });
 
         peer.on('stream', (currentStream) => {
+            setRemoteStream(currentStream);
             if (userVideo.current) userVideo.current.srcObject = currentStream;
         });
 
         peer.on('error', (err) => {
             console.error("Peer Error:", err);
-            // alert(`Call Error: ${err.message}`); 
+            toast.error("Call connection failed. Please try again.");
+            leaveCall();
         });
 
         peer.signal(call.signal);
@@ -166,12 +168,7 @@ const ChatPage = () => {
             initiator: true,
             trickle: true,
             stream: currentStream,
-            config: {
-                iceServers: [
-                    { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:global.stun.twilio.com:3478' }
-                ]
-            }
+            config: { iceServers: ICE_SERVERS }
         });
 
         peer.on('signal', (data) => {
@@ -190,11 +187,14 @@ const ChatPage = () => {
         });
 
         peer.on('stream', (currentStream) => {
+            setRemoteStream(currentStream);
             if (userVideo.current) userVideo.current.srcObject = currentStream;
         });
 
         peer.on('error', (err) => {
             console.error("Peer Error:", err);
+            toast.error("Call connection failed. Please try again.");
+            leaveCall();
         });
 
         connectionRef.current = peer;
@@ -211,13 +211,27 @@ const ChatPage = () => {
     const leaveCall = () => {
         setCallEnded(true);
         setIsIncoming(false);
-        if (connectionRef.current) connectionRef.current.destroy();
+        setCallAccepted(false);
+        setRemoteStream(null);
+
+        if (connectionRef.current) {
+            connectionRef.current.destroy();
+            connectionRef.current = null;
+        }
+
         if (stream) {
-            stream.getTracks().forEach(track => track.stop());
+            stream.getTracks().forEach(track => {
+                track.stop();
+                track.enabled = false;
+            });
             setStream(null);
         }
+
+        if (myVideo.current) myVideo.current.srcObject = null;
+        if (userVideo.current) userVideo.current.srcObject = null;
+
+        // Reset call state immediately to close modal without refresh/freeze
         setCall({});
-        window.location.reload(); // Force reload to ensure mic/connection is completely killed
     };
 
     return (

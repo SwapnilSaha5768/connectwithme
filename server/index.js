@@ -15,13 +15,14 @@ const mongoSanitize = require('express-mongo-sanitize');
 const rateLimit = require('express-rate-limit');
 
 const app = express();
-app.set('trust proxy', 1); // Trust first proxy (Render/Vercel)
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 
 // Middleware
 const allowedOrigins = [
   "https://localhost:5173",
   "https://connectwithme-six.vercel.app",
+  "https://10.212.251.124:5173"
 ];
 
 const corsOptions = {
