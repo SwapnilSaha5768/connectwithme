@@ -7,6 +7,7 @@ const {
     addToGroup,
     removeFromGroup,
     deleteChat,
+    getIceServers
 } = require('../controllers/chatController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -20,5 +21,6 @@ router.route('/groupadd').put(protect, addToGroup);
 router.route('/groupadd').put(protect, addToGroup);
 router.route('/groupremove').put(protect, removeFromGroup);
 router.route('/:chatId').delete(protect, deleteChat);
+router.route('/ice-servers').get(protect, getIceServers);
 
 module.exports = router;

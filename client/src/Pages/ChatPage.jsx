@@ -120,46 +120,25 @@ const ChatPage = () => {
         }
     };
 
-
+    // ICE Server Configuration (Fetched from Backend)
     const getIceServers = async () => {
-        const meteredKey = import.meta.env.VITE_METERED_API_KEY;
-        const meteredDomain = import.meta.env.VITE_METERED_DOMAIN;
-
-        console.log("DEBUG: Metered Config Check");
-        console.log(`Domain: '${meteredDomain}'`); 
-        console.log(`Key: '${meteredKey}'`);
-
-        if (meteredKey && meteredDomain) {
-            try {
-                const response = await axios.get(
-                    `https://${import.meta.env.VITE_METERED_DOMAIN}/api/v1/turn/credentials?apiKey=${import.meta.env.VITE_METERED_API_KEY}`,
-                    { withCredentials: false }
-                );
-                return response.data;
-            } catch (error) {
-                console.error("Failed to fetch Metered ICE servers:", error);
-            }
+        try {
+            const config = {
+                headers: {
+                    Authorization: `Bearer ${user.token}`,
+                },
+            };
+            const { data } = await axios.get('/api/chat/ice-servers', config);
+            console.log("ICE Servers loaded from backend");
+            return data;
+        } catch (error) {
+            console.error("Failed to fetch ICE servers from backend:", error);
+            // Fallback (just in case backend fails completely)
+            return [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:global.stun.twilio.com:3478' }
+            ];
         }
-
-        return [
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:global.stun.twilio.com:3478' },
-            {
-                urls: 'turn:openrelay.metered.ca:80',
-                username: 'openrelayproject',
-                credential: 'openrelayproject'
-            },
-            {
-                urls: 'turn:openrelay.metered.ca:443',
-                username: 'openrelayproject',
-                credential: 'openrelayproject'
-            },
-            {
-                urls: 'turn:openrelay.metered.ca:443?transport=tcp',
-                username: 'openrelayproject',
-                credential: 'openrelayproject'
-            }
-        ];
     };
 
     const answerCall = async () => {

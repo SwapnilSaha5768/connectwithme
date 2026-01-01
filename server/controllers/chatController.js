@@ -234,4 +234,45 @@ module.exports = {
     addToGroup,
     removeFromGroup,
     deleteChat,
+    getIceServers
 };
+
+// @desc    Get ICE Servers (Metered.ca or Free Fallback)
+// @route   GET /api/chat/ice-servers
+// @access  Protected
+const getIceServers = asyncHandler(async (req, res) => {
+    try {
+        // 1. Try Metered.ca if configured in SERVER .env
+        if (process.env.METERED_API_KEY && process.env.METERED_DOMAIN) {
+            const axios = require('axios');
+            const response = await axios.get(`https://${process.env.METERED_DOMAIN}/api/v1/turn/credentials?apiKey=${process.env.METERED_API_KEY}`);
+            return res.json(response.data);
+        }
+    } catch (error) {
+        console.error("Metered Fetch Error:", error.message);
+        // Fallthrough to free servers
+    }
+
+    // 2. Fallback: Free Public STUN + OpenRelay
+    const freeServers = [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:global.stun.twilio.com:3478' },
+        {
+            urls: 'turn:openrelay.metered.ca:80',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+        },
+        {
+            urls: 'turn:openrelay.metered.ca:443',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+        },
+        {
+            urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+        }
+    ];
+
+    res.json(freeServers);
+});
