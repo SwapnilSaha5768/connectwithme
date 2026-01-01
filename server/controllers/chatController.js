@@ -226,17 +226,6 @@ const deleteChat = asyncHandler(async (req, res) => {
     }
 });
 
-module.exports = {
-    accessChat,
-    fetchChats,
-    createGroupChat,
-    renameGroup,
-    addToGroup,
-    removeFromGroup,
-    deleteChat,
-    getIceServers
-};
-
 // @desc    Get ICE Servers (Metered.ca or Free Fallback)
 // @route   GET /api/chat/ice-servers
 // @access  Protected
@@ -276,3 +265,14 @@ const getIceServers = asyncHandler(async (req, res) => {
 
     res.json(freeServers);
 });
+
+module.exports = {
+    accessChat,
+    fetchChats,
+    createGroupChat,
+    renameGroup,
+    addToGroup,
+    removeFromGroup,
+    deleteChat,
+    getIceServers
+};
