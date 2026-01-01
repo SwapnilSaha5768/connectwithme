@@ -122,10 +122,15 @@ const ChatPage = () => {
 
 
     const getIceServers = async () => {
+        const meteredKey = import.meta.env.VITE_METERED_API_KEY;
+        const meteredDomain = import.meta.env.VITE_METERED_DOMAIN;
 
-        if (import.meta.env.VITE_METERED_API_KEY && import.meta.env.VITE_METERED_DOMAIN) {
+        console.log("DEBUG: Metered Config Check");
+        console.log(`Domain: '${meteredDomain}'`); 
+        console.log(`Key: '${meteredKey}'`);
+
+        if (meteredKey && meteredDomain) {
             try {
-                // Request must NOT send credentials (cookies) to external Metered API
                 const response = await axios.get(
                     `https://${import.meta.env.VITE_METERED_DOMAIN}/api/v1/turn/credentials?apiKey=${import.meta.env.VITE_METERED_API_KEY}`,
                     { withCredentials: false }
